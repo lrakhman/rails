@@ -136,7 +136,20 @@ module ActiveRecord
           ensure
             tempfile.close
           end
+
+          permission_args = {
+            mode: File.stat(filename).mode,
+            owner: File.stat(filename).uid,
+            group: File.stat(filename).gid
+          }
+
           FileUtils.mv(tempfile.path, filename)
+          restore_permissions(filename: filename, permission_args: permission_args)
+        end
+
+        def restore_permissions(filename:, permission_args:)
+          File.chmod(permission_args[:mode], filename)
+          File.chown(permission_args[:uid], permission_args[:gid], filename)
         end
     end
   end

@@ -251,6 +251,16 @@ if current_adapter?(:PostgreSQLAdapter)
         assert_equal [" statement \n", "-- lower comment\n"], File.readlines(@filename).first(2)
       end
 
+      def test_structure_dump_header_comments_restores_file_permissions
+        Kernel.stubs(:system).returns(true)
+        File.write(@filename, "-- header comment\n\n-- more header comment\n statement \n-- lower comment\n")
+        original_file_mode = File.stat(@filename).mode
+
+        ActiveRecord::Tasks::DatabaseTasks.structure_dump(@configuration, @filename)
+
+        assert_equal original_file_mode, File.stat(@filename).mode
+      end
+
       def test_structure_dump_with_extra_flags
         expected_command = ["pg_dump", "-s", "-x", "-O", "-f", @filename, "--noop", "my-app-db"]
 
